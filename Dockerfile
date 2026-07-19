@@ -3,6 +3,10 @@
 # (2) patch reranker -> Gemini (mcp server fixa OpenAI);
 # (3) patch host -> desliga anti-DNS-rebinding do FastMCP (bloqueia dominio;
 #     issue getzep/graphiti #1205). Endpoint ja protegido por Basic Auth+HTTPS.
+# (4) patch small_model -> o branch gemini da factory nao preenche o slot do
+#     "modelo pequeno", entao ele caia no default gemini-2.5-flash-lite, que o
+#     Google fechou (404) e matava o episodio na fila DEPOIS do modelo principal
+#     ter respondido 200. Nao ha como corrigir por YAML. (19/07/2026)
 # Verificado no deploy real de 19/07/2026.
 FROM zepai/knowledge-graph-mcp:standalone
 
@@ -12,5 +16,7 @@ RUN /app/mcp/.venv/bin/python -m ensurepip --upgrade || true \
 
 COPY patch_reranker.py /tmp/patch_reranker.py
 COPY patch_host.py /tmp/patch_host.py
+COPY patch_small_model.py /tmp/patch_small_model.py
 RUN /app/mcp/.venv/bin/python /tmp/patch_reranker.py \
- && /app/mcp/.venv/bin/python /tmp/patch_host.py
+ && /app/mcp/.venv/bin/python /tmp/patch_host.py \
+ && /app/mcp/.venv/bin/python /tmp/patch_small_model.py
